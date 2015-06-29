@@ -29,6 +29,7 @@ import org.elasticsearch.hadoop.serialization.FieldType;
 import org.elasticsearch.hadoop.serialization.Parser;
 import org.elasticsearch.hadoop.serialization.Parser.Token;
 import org.elasticsearch.hadoop.serialization.SettingsAware;
+import org.elasticsearch.hadoop.util.DateUtils;
 import org.elasticsearch.hadoop.util.StringUtils;
 
 
@@ -38,6 +39,7 @@ import org.elasticsearch.hadoop.util.StringUtils;
 public class JdkValueReader implements SettingsAware, ValueReader {
 
     private boolean emptyAsNull = true;
+    private boolean richDate = true;
 
     @Override
     public Object readValue(Parser parser, String value, FieldType esType) {
@@ -70,7 +72,7 @@ public class JdkValueReader implements SettingsAware, ValueReader {
         case DATE:
             return date(value, parser);
         case OBJECT:
-		case NESTED:
+        case NESTED:
             // everything else (IP, GEO) gets translated to strings
         default:
             return textValue(value);
@@ -331,22 +333,26 @@ public class JdkValueReader implements SettingsAware, ValueReader {
 
             // UNIX time format
             if (tk == Token.VALUE_NUMBER) {
-                val = parseDate(parser.longValue());
+                val = parseDate(parser.longValue(), richDate);
             }
             else {
-                val = parseDate(value);
+                val = parseDate(value, richDate);
             }
         }
 
         return processDate(val);
     }
 
-    protected Object parseDate(Long value) {
-        return new Date(value);
+    protected Object parseDate(Long value, boolean richDate) {
+        return (richDate ? createDate(value) : value);
     }
 
-    protected Object parseDate(String value) {
-        return parseString(value);
+    protected Object parseDate(String value, boolean richDate) {
+        return (richDate ? createDate(DateUtils.parseDateJdk(value).getTimeInMillis()) : parseString(value));
+    }
+
+    protected Object createDate(long timestamp) {
+        return new Date(timestamp);
     }
 
     protected Object processDate(Object value) {
@@ -356,5 +362,6 @@ public class JdkValueReader implements SettingsAware, ValueReader {
     @Override
     public void setSettings(Settings settings) {
         emptyAsNull = settings.getFieldReadEmptyAsNull();
+        richDate = settings.getMappingDateRich();
     }
 }

@@ -136,7 +136,7 @@ public abstract class ParsingUtils {
         }
     }
 
-	public static List<Object> values(Parser parser, String... paths) {
+    public static List<Object> values(Parser parser, String... paths) {
         List<Matcher> matchers = new ArrayList<Matcher>(paths.length);
         int maxNesting = 0;
         for (String path : paths) {
@@ -149,47 +149,27 @@ public abstract class ParsingUtils {
 
         doFind(parser, matchers, 0, maxNesting);
 
-		List<Object> matches = new ArrayList<Object>();
+        List<Object> matches = new ArrayList<Object>();
         for (Matcher matcher : matchers) {
-			matches.add(matcher.matched ? matcher.value : NOT_FOUND);
+            matches.add(matcher.matched ? matcher.value : NOT_FOUND);
         }
 
         return matches;
     }
 
     private static void doFind(Parser parser, List<Matcher> currentMatchers, int level, int maxNesting) {
-        String currentName;
         Token token = parser.currentToken();
-
         if (token == null) {
-            token = parser.nextToken();
+            // advance to the initial START_OBJECT token
+            parser.nextToken();
         }
-        List<Matcher> nextLevel = null;
 
-        while ((token = parser.nextToken()) != null) {
-            if (token == Token.START_OBJECT) {
-				if (level < maxNesting) {
-                    if (nextLevel != null) {
-                        doFind(parser, nextLevel, level + 1, maxNesting);
-                    }
-                    // first round - a bit exceptional
-                    else if (level == -1) {
-                        doFind(parser, currentMatchers, level + 1, maxNesting);
-                    }
-                    // no need to go deeper, there are no matchers
-                    else {
-                        parser.skipChildren();
-                    }
-                }
-                else {
-                    parser.skipChildren();
-                }
-            }
-            else if (token == Token.FIELD_NAME) {
-                currentName = parser.currentName();
-
+        while ((token = parser.nextToken()) != null && token != Token.END_OBJECT) {
+            if (token == Token.FIELD_NAME) {
+                String currentName = parser.currentName();
                 Object value = null;
                 boolean valueRead = false;
+                List<Matcher> nextLevel = null;
 
                 for (Matcher matcher : currentMatchers) {
                     if (matcher.matches(currentName, level)) {
@@ -225,15 +205,24 @@ public abstract class ParsingUtils {
                         }
                     }
                 }
+
+                if (!valueRead) {
+                    // must parse or skip the value
+                    switch (parser.nextToken()) {
+                        case START_OBJECT:
+                            if (level < maxNesting && nextLevel != null) {
+                                doFind(parser, nextLevel, level + 1, maxNesting);
+                            } else {
+                                parser.skipChildren();
+                            }
+                            break;
+                        case START_ARRAY:
+                            // arrays are not handled; simply ignore
+                            parser.skipChildren();
+                            break;
+                    }
+                }
             }
-            else if (token == Token.END_OBJECT) {
-                // end current block
-            }
-            // arrays are not handled; simply ignore
-            else if (token == Token.START_ARRAY) {
-                parser.skipChildren();
-            }
-            // ignore other tokens
         }
     }
 

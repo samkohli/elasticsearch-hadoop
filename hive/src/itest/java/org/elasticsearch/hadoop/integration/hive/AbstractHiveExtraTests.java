@@ -25,11 +25,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
-import static org.elasticsearch.hadoop.integration.hive.HiveSuite.*;
+import static org.elasticsearch.hadoop.integration.hive.HiveSuite.provisionEsLib;
+import static org.elasticsearch.hadoop.integration.hive.HiveSuite.server;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 
 public class AbstractHiveExtraTests {
 
@@ -77,15 +81,15 @@ public class AbstractHiveExtraTests {
         String resource = "hive/date-as-long";
         RestUtils.touch("hive");
         RestUtils.putMapping(resource, "org/elasticsearch/hadoop/hive/hive-date.json");
-        RestUtils.putData(resource + "/1", "{\"type\" : 1, \"&t\" : 1407239910771}".getBytes());
+        RestUtils.postData(resource + "/1", "{\"type\" : 1, \"&t\" : 1407239910771}".getBytes());
 
         RestUtils.refresh("hive");
 
         String drop = "DROP TABLE IF EXISTS nixtime";
         String create = "CREATE EXTERNAL TABLE nixtime ("
                 + "type     BIGINT,"
-                + "date     TIMESTAMP)"
-                + HiveSuite.tableProps("hive/date-as-long", null, "'es.mapping.names'='date:&t'");
+                + "dte     TIMESTAMP)"
+                + HiveSuite.tableProps("hive/date-as-long", null, "'es.mapping.names'='dte:&t'");
 
         String query = "SELECT * from nixtime WHERE type = 1";
 

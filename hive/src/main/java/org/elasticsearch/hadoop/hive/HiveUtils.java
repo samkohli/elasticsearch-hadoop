@@ -95,7 +95,7 @@ abstract class HiveUtils {
     }
 
     static FieldAlias alias(Settings settings) {
-        Map<String, String> aliasMap = SettingsUtils.aliases(settings.getProperty(HiveConstants.MAPPING_NAMES));
+        Map<String, String> aliasMap = SettingsUtils.aliases(settings.getProperty(HiveConstants.MAPPING_NAMES), true);
 
         // add default aliases for serialization (_colX -> mapping name)
         Map<String, String> columnMap = columnMap(settings);
@@ -114,7 +114,7 @@ abstract class HiveUtils {
             aliasMap.put(columnIndex, columnName);
         }
 
-        return new FieldAlias(aliasMap);
+        return new FieldAlias(aliasMap, true);
     }
 
     static Map<String, String> columnMap(Settings settings) {
@@ -148,7 +148,6 @@ abstract class HiveUtils {
         }
 
         settings.setProperty(HiveConstants.COLUMN_COMMENTS, "");
-        //tbl.remove(HiveConstants.COLUMN_COMMENTS);
-		tbl.setProperty(HiveConstants.COLUMN_COMMENTS, "");
+        tbl.setProperty(HiveConstants.COLUMN_COMMENTS, "");
     }
 }

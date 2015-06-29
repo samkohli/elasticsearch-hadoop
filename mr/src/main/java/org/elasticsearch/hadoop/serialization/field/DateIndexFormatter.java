@@ -21,9 +21,8 @@ package org.elasticsearch.hadoop.serialization.field;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import javax.xml.bind.DatatypeConverter;
-
 import org.elasticsearch.hadoop.util.Constants;
+import org.elasticsearch.hadoop.util.DateUtils;
 import org.elasticsearch.hadoop.util.StringUtils;
 
 
@@ -59,7 +58,7 @@ public class DateIndexFormatter implements IndexFormatter {
 
         // gotta love regex
         // use lookahead to match isolated y/yyy with yyyy
-        format.replaceAll("((?<!y)(?:y|yyy)(?!y))", "yyyy");
+        format = format.replaceAll("((?<!y)(?:y|yyy)(?!y))", "yyyy");
 
         return format;
     }
@@ -70,7 +69,8 @@ public class DateIndexFormatter implements IndexFormatter {
             return null;
         }
 
-        Calendar calendar = DatatypeConverter.parseDateTime(value);
+        Calendar calendar = DateUtils.parseDateJdk(value);
+        dateFormat.setCalendar(calendar);
         return dateFormat.format(calendar.getTime());
     }
 }

@@ -48,8 +48,8 @@ public interface ConfigurationOptions {
     String ES_QUERY = "es.query";
 
     /** Clients only */
-	String ES_NODES_CLIENT_ONLY = "es.nodes.client.only";
-	String ES_NODES_CLIENT_ONLY_DEFAULT = "false";
+    String ES_NODES_CLIENT_ONLY = "es.nodes.client.only";
+    String ES_NODES_CLIENT_ONLY_DEFAULT = "false";
 
     /** Elasticsearch batch size given in bytes */
     String ES_BATCH_SIZE_BYTES = "es.batch.size.bytes";
@@ -59,7 +59,7 @@ public interface ConfigurationOptions {
     String ES_BATCH_SIZE_ENTRIES = "es.batch.size.entries";
     String ES_BATCH_SIZE_ENTRIES_DEFAULT = "1000";
 
-    /** Elasticsearch batch size given in entries */
+    /** Elasticsearch disable auto-flush on batch overflow */
     String ES_BATCH_FLUSH_MANUAL = "es.batch.flush.manual";
     String ES_BATCH_FLUSH_MANUAL_DEFAULT = "false";
 
@@ -155,6 +155,10 @@ public interface ConfigurationOptions {
     String ES_MAPPING_PARAMS_DEFAULT_EXTRACTOR_CLASS = DefaultParamsExtractor.class.getName();
     String ES_MAPPING_CONSTANT_AUTO_QUOTE = "es.mapping.constant.auto.quote";
     String ES_MAPPING_CONSTANT_AUTO_QUOTE_DEFAULT = "true";
+
+    String ES_MAPPING_DATE_RICH_OBJECT = "es.mapping.date.rich";
+    String ES_MAPPING_DATE_RICH_OBJECT_DEFAULT = "true";
+
 
     String ES_MAPPING_VERSION_TYPE = "es.mapping.version.type";
     String ES_MAPPING_VERSION_TYPE_INTERNAL = "internal";

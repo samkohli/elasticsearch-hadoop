@@ -28,7 +28,6 @@ import org.elasticsearch.hadoop.serialization.dto.mapping.Field;
 import org.elasticsearch.hadoop.util.ByteSequence;
 import org.elasticsearch.hadoop.util.BytesArray;
 import org.elasticsearch.hadoop.util.IOUtils;
-import org.elasticsearch.hadoop.util.StringUtils;
 import org.elasticsearch.hadoop.util.TestSettings;
 import org.elasticsearch.hadoop.util.TestUtils;
 import org.elasticsearch.hadoop.util.unit.TimeValue;
@@ -43,6 +42,7 @@ public class RestUtils {
             super(new TestSettings());
         }
 
+        @Override
         public Response execute(Request.Method method, String path, ByteSequence buffer) {
             return super.execute(method, path, buffer);
         }
@@ -89,15 +89,20 @@ public class RestUtils {
         putMapping(index, TestUtils.fromInputStream(RestUtils.class.getClassLoader().getResourceAsStream(location)));
     }
 
-    public static void putData(String index, String location) throws Exception {
+    public static void postData(String index, String location) throws Exception {
         byte[] fromInputStream = TestUtils.fromInputStream(RestUtils.class.getClassLoader().getResourceAsStream(location));
-        System.out.println(StringUtils.asUTFString(fromInputStream));
-        putData(index, fromInputStream);
+        postData(index, fromInputStream);
     }
 
-    public static void putData(String index, byte[] content) throws Exception {
+    public static void postData(String index, byte[] content) throws Exception {
         ExtendedRestClient rc = new ExtendedRestClient();
         rc.post(index, content);
+        rc.close();
+    }
+
+    public static void put(String index, byte[] content) throws Exception {
+        ExtendedRestClient rc = new ExtendedRestClient();
+        rc.put(index, content);
         rc.close();
     }
 
@@ -132,7 +137,7 @@ public class RestUtils {
         rc.close();
         return result;
     }
-    
+
     public static boolean flush(String index) throws IOException {
         ExtendedRestClient rc = new ExtendedRestClient();
         boolean result = rc.touch(index);

@@ -86,7 +86,7 @@ public class WritableValueReader extends JdkValueReader {
         case NESTED:
             arrayType = LinkedMapWritable.class;
             break;
-        // everything else gets translated to String
+            // everything else gets translated to String
         default:
             arrayType = Text.class;
         }
@@ -127,11 +127,16 @@ public class WritableValueReader extends JdkValueReader {
     }
 
     @Override
-	protected Object parseDate(Long value) {
-		return new LongWritable(value);
-	}
+    protected Object parseDate(Long value, boolean richDate) {
+        return processLong(value);
+    }
 
-	@Override
+    @Override
+    protected Object parseDate(String value, boolean richDate) {
+        return parseString(value);
+    }
+
+    @Override
     protected Object processDouble(Double value) {
         return new DoubleWritable(value);
     }

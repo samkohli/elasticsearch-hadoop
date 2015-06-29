@@ -49,7 +49,9 @@ public abstract class SettingsUtils {
     }
 
     public static void pinNode(Settings settings, String node, int port) {
-        settings.setProperty(InternalConfigurationOptions.INTERNAL_ES_PINNED_NODE, qualifyNode(node, port));
+        if (StringUtils.hasText(node) && port > 0) {
+            settings.setProperty(InternalConfigurationOptions.INTERNAL_ES_PINNED_NODE, qualifyNode(node, port));
+        }
     }
 
     public static boolean hasPinnedNode(Settings settings) {
@@ -72,7 +74,7 @@ public abstract class SettingsUtils {
     }
 
     public static void setDiscoveredNodes(Settings settings, Collection<String> nodes) {
-        settings.setProperty(InternalConfigurationOptions.INTERNAL_ES_DISCOVERED_NODES, StringUtils.concatenate(nodes, ","));
+        settings.setProperty(InternalConfigurationOptions.INTERNAL_ES_DISCOVERED_NODES, StringUtils.concatenate(nodes, StringUtils.DEFAULT_DELIMITER));
     }
 
     public static List<String> declaredNodes(Settings settings) {
@@ -85,8 +87,8 @@ public abstract class SettingsUtils {
         return (StringUtils.hasText(discoveredNodes) ? StringUtils.tokenize(discoveredNodes) : declaredNodes(settings));
     }
 
-    public static Map<String, String> aliases(String definition) {
-        List<String> aliases = StringUtils.tokenize(definition, ",");
+    public static Map<String, String> aliases(String definition, boolean caseInsensitive) {
+        List<String> aliases = StringUtils.tokenize(definition);
 
         Map<String, String> aliasMap = new LinkedHashMap<String, String>();
 
@@ -97,14 +99,28 @@ public abstract class SettingsUtils {
                 int index = string.indexOf(":");
                 if (index > 0) {
                     String key = string.substring(0, index);
-                    // save the lower case version as well since Hive does that for top-level keys
                     aliasMap.put(key, string.substring(index + 1));
-                    aliasMap.put(key.toLowerCase(Locale.ENGLISH), string.substring(index + 1));
+                    aliasMap.put(caseInsensitive ? key.toLowerCase(Locale.ROOT) : key, string.substring(index + 1));
                 }
             }
         }
 
         return aliasMap;
+    }
+
+    public static void setFilters(Settings settings, String... filters) {
+        // clear any filters inside the settings
+        settings.setProperty(InternalConfigurationOptions.INTERNAL_ES_QUERY_FILTERS, "");
+
+        if (ObjectUtils.isEmpty(filters)) {
+            return;
+        }
+
+        settings.setProperty(InternalConfigurationOptions.INTERNAL_ES_QUERY_FILTERS, IOUtils.serializeToBase64(filters));
+    }
+
+    public static String[] getFilters(Settings settings) {
+        return IOUtils.deserializeFromBase64(settings.getProperty(InternalConfigurationOptions.INTERNAL_ES_QUERY_FILTERS));
     }
 
     /**

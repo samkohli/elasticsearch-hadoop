@@ -33,6 +33,7 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.codehaus.jackson.io.JsonStringEncoder;
 import org.elasticsearch.hadoop.EsHadoopIllegalArgumentException;
+import org.elasticsearch.hadoop.serialization.json.BackportedJsonStringEncoder;
 
 
 /**
@@ -42,7 +43,10 @@ public abstract class StringUtils {
 
     public static final Charset UTF_8 = Charset.forName("UTF-8");
     public static final String EMPTY = "";
-	public static final String[] EMPTY_ARRAY = new String[0];
+    public static final String[] EMPTY_ARRAY = new String[0];
+    public static final String DEFAULT_DELIMITER = ",";
+
+    private static final boolean HAS_JACKSON_CLASS = ObjectUtils.isClassPresent("org.codehaus.jackson.io.JsonStringEncoder", StringUtils.class.getClassLoader());
 
     public static boolean hasLength(CharSequence sequence) {
         return (sequence != null && sequence.length() > 0);
@@ -61,19 +65,19 @@ public abstract class StringUtils {
         return false;
     }
 
-	public static int countOccurrences(String string, String substring) {
-		if (string == null || substring == null || string.length() == 0 || substring.length() == 0) {
-			return 0;
-		}
-		int count = 0;
-		int currentPosition = 0;
-		int index;
-		while ((index = string.indexOf(substring, currentPosition)) != -1) {
-			++count;
-			currentPosition = index + substring.length();
-		}
-		return count;
-	}
+    public static int countOccurrences(String string, String substring) {
+        if (string == null || substring == null || string.length() == 0 || substring.length() == 0) {
+            return 0;
+        }
+        int count = 0;
+        int currentPosition = 0;
+        int index;
+        while ((index = string.indexOf(substring, currentPosition)) != -1) {
+            ++count;
+            currentPosition = index + substring.length();
+        }
+        return count;
+    }
 
     public static List<String> tokenize(String string) {
         return tokenize(string, ",");
@@ -319,6 +323,14 @@ public abstract class StringUtils {
         }
     }
 
+    public static String decodePath(String path) {
+        try {
+            return URIUtil.decode(path, "UTF-8");
+        } catch (URIException ex) {
+            throw new EsHadoopIllegalArgumentException("Cannot encode path" + path, ex);
+        }
+    }
+
     public static String encodeQuery(String query) {
         try {
             return URLEncoder.encode(query, "UTF-8");
@@ -335,30 +347,36 @@ public abstract class StringUtils {
         }
     }
 
-	public static boolean isLowerCase(CharSequence string) {
-		for (int index = 0; index < string.length(); index++) {
-			if (Character.isUpperCase(string.charAt(index))) {
-				return false;
-			}
-		}
-		return true;
-	}
+    public static boolean isLowerCase(CharSequence string) {
+        for (int index = 0; index < string.length(); index++) {
+            if (Character.isUpperCase(string.charAt(index))) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-	public static String jsonEncoding(String rawString) {
-		return new String(JsonStringEncoder.getInstance().quoteAsString(rawString));
-	}
+    public static String jsonEncoding(String rawString) {
+        return new String(HAS_JACKSON_CLASS ? JacksonStringEncoder.jsonEncoding(rawString) : BackportedJsonStringEncoder.getInstance().quoteAsString(rawString));
+    }
 
-	// return the value in a JSON friendly way
-	public static String toJsonString(Object value) {
-		if (value == null) {
-			return "null";
-		}
-		else if (value.getClass().equals(String.class)) {
-			return "\"" + StringUtils.jsonEncoding(value.toString()) + "\"";
-		}
-		// else it's a Boolean or Number so no escaping or quotes
-		else {
-			return value.toString();
-		}
-	}
+    // return the value in a JSON friendly way
+    public static String toJsonString(Object value) {
+        if (value == null) {
+            return "null";
+        }
+        else if (value.getClass().equals(String.class)) {
+            return "\"" + StringUtils.jsonEncoding(value.toString()) + "\"";
+        }
+        // else it's a Boolean or Number so no escaping or quotes
+        else {
+            return value.toString();
+        }
+    }
+
+    private static class JacksonStringEncoder {
+        public static char[] jsonEncoding(String rawString) {
+            return JsonStringEncoder.getInstance().quoteAsString(rawString);
+        }
+    }
 }

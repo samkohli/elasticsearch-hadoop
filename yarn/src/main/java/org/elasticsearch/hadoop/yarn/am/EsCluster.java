@@ -35,6 +35,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
 import org.apache.hadoop.yarn.api.records.Container;
@@ -66,7 +67,7 @@ class EsCluster implements AutoCloseable {
     private final NodeMasterRpc nmRpc;
     private final Configuration cfg;
     private final Config appConfig;
-	private final Map<String, String> masterEnv;
+    private final Map<String, String> masterEnv;
 
     private volatile boolean running = false;
     private volatile boolean clusterHasFailed = false;
@@ -79,12 +80,14 @@ class EsCluster implements AutoCloseable {
         this.cfg = rpc.getConfiguration();
         this.nmRpc = new NodeMasterRpc(cfg, rpc.getNMToCache());
         this.appConfig = appConfig;
-		this.masterEnv = masterEnv;
+        this.masterEnv = masterEnv;
     }
 
     public void start() {
         running = true;
         nmRpc.start();
+
+        UserGroupInformation.setConfiguration(cfg);
 
         log.info(String.format("Allocating Elasticsearch cluster with %d nodes", appConfig.containersToAllocate()));
 
@@ -201,12 +204,12 @@ class EsCluster implements AutoCloseable {
     private Map<String, String> setupEnv(Config appConfig) {
         // standard Hadoop env setup
         Map<String, String> env = YarnUtils.setupEnv(cfg);
-		// copy esYarn Config
-		//env.put(EsYarnConstants.CFG_PROPS, masterEnv.get(EsYarnConstants.CFG_PROPS));
-		// plus expand its vars into the env
+        // copy esYarn Config
+        //env.put(EsYarnConstants.CFG_PROPS, masterEnv.get(EsYarnConstants.CFG_PROPS));
+        // plus expand its vars into the env
         YarnUtils.addToEnv(env, appConfig.envVars());
 
-		return env;
+        return env;
     }
 
 

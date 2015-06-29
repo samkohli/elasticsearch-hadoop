@@ -77,9 +77,9 @@ public class AbstractHiveSearchTest {
     public void basicLoad() throws Exception {
 
         String create = "CREATE EXTERNAL TABLE artistsload" + testInstance + "("
-                + "id 		BIGINT, "
-                + "name 	STRING, "
-                + "links 	STRUCT<url:STRING, picture:STRING>) "
+                + "id         BIGINT, "
+                + "name     STRING, "
+                + "links     STRUCT<url:STRING, picture:STRING>) "
                 + tableProps("hive/artists");
 
         String select = "SELECT * FROM artistsload" + testInstance;
@@ -194,10 +194,10 @@ public class AbstractHiveSearchTest {
     @Test
     public void columnAliases() throws Exception {
         String create = "CREATE EXTERNAL TABLE aliasload" + testInstance + " ("
-                + "daTE     TIMESTAMP, "
+                + "dTE     TIMESTAMP, "
                 + "Name     STRING, "
                 + "links    STRUCT<uRl:STRING, pICture:STRING>) "
-                + tableProps("hive/aliassave", "'es.mapping.names' = 'daTE:@timestamp, uRl:url_123'");
+                + tableProps("hive/aliassave", "'es.mapping.names' = 'dTE:@timestamp, uRl:url_123'");
 
         String select = "SELECT * FROM aliasload" + testInstance;
 
@@ -213,7 +213,7 @@ public class AbstractHiveSearchTest {
     @Test
     public void testMissingIndex() throws Exception {
         String create = "CREATE EXTERNAL TABLE missing" + testInstance + " ("
-                + "daTE     TIMESTAMP, "
+                + "dTE     TIMESTAMP, "
                 + "Name     STRING, "
                 + "links    STRUCT<uRl:STRING, pICture:STRING>) "
                 + tableProps("foobar/missing", "'es.index.read.missing.as.empty' = 'true'");

@@ -143,7 +143,7 @@ public abstract class Settings {
     }
 
     public String getOperation() {
-        return getProperty(ES_WRITE_OPERATION, ES_WRITE_OPERATION_DEFAULT).toLowerCase(Locale.ENGLISH);
+        return getProperty(ES_WRITE_OPERATION, ES_WRITE_OPERATION_DEFAULT).toLowerCase(Locale.ROOT);
     }
 
     public String getMappingId() {
@@ -221,6 +221,10 @@ public abstract class Settings {
 
     public boolean getMappingConstantAutoQuote() {
         return Booleans.parseBoolean(getProperty(ES_MAPPING_CONSTANT_AUTO_QUOTE, ES_MAPPING_CONSTANT_AUTO_QUOTE_DEFAULT));
+    }
+
+    public boolean getMappingDateRich() {
+        return Booleans.parseBoolean(getProperty(ES_MAPPING_DATE_RICH_OBJECT, ES_MAPPING_DATE_RICH_OBJECT_DEFAULT));
     }
 
     public String getMappingIncludes() {
